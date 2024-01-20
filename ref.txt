@@ -1,0 +1,36 @@
+const express = require("express")
+const app = express()
+const port = 4000
+const gtts = require("node-gtts")("en-uk")
+const path = require("path")
+const puppeteer = require("puppeteer")
+const cors = require("cors")
+
+app.use(express.urlencoded({ extended: true }))
+app.use(express.json())
+app.use(cors())
+
+const TextToSpeech = async (url, name) => {
+	const filepath = path.join(__dirname, `${name}.mp3`)
+	const browser = await puppeteer.launch()
+	const page = await browser.newPage()
+	await page.goto(url)
+	const content = await page.$eval("*", (el) => el.innerText)
+	const strippedContent = content.replace(/\s+/g, " ").trim()
+	gtts.save(filepath, strippedContent, function() {
+		console.log("Audio Downloaded")
+	})
+	await browser.close()
+}
+
+app.post("/get_text", async (req, res) => {
+	let { url, name } = req.body
+	TextToSpeech(url, name)
+})
+
+app.listen(port, () => {
+	console.log(`Listening at http://localhost:${port}`)
+})
+
+
+"react-scripts": "4.0.3",
